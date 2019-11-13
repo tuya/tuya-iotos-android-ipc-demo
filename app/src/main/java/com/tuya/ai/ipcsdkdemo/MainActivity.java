@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.setAuthorKey("");
         iNetConfigManager.setUserId("");
-        iNetConfigManager.enableMQTT();
 
         iNetConfigManager.configNetInfo(new INetConfigManager.NetConfigCallback() {
             @Override
