@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
                 transManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
                 transManager.initIoTSDK(token, "", "", "");
+                //如果还需要接入IPC，使用initTransSDK 替代 initIoTSDK
+//                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "", "", "");
             }
 
             @Override
