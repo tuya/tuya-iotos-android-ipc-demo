@@ -9,12 +9,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
+import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
+import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getName();
+    private static final String TAG = "IPC_DEMO";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,18 +39,23 @@ public class MainActivity extends AppCompatActivity {
         iNetConfigManager.setAuthorKey("");
         iNetConfigManager.setUserId("");
 
-        iNetConfigManager.configNetInfo(new INetConfigManager.NetConfigCallback() {
+        TuyaNetConfig.setDebug(true);
+
+        INetConfigManager.NetConfigCallback netConfigCallback = new INetConfigManager.NetConfigCallback() {
             @Override
             public void onNetConnectFailed() {
+                Log.w(TAG, "retry");
 
+                iNetConfigManager.configNetInfo(this);
             }
 
             @Override
             public void configOver(boolean first, String token) {
                 Log.d(TAG, "configOver: token" + token);
                 IMediaTransManager transManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
+                IMqttProcessManager mqttProcessManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MQTT_SERVICE);
 
-                transManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
+                mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
                 transManager.initIoTSDK(token, "", "", "");
                 //如果还需要接入IPC，使用initTransSDK 替代 initIoTSDK
@@ -64,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
             public void recConfigInfo() {
                 Log.d(TAG, "recConfigInfo: ");
             }
-        });
+        };
+
+        iNetConfigManager.configNetInfo(netConfigCallback);
+
     }
 }
