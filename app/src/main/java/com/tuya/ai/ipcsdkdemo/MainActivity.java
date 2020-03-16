@@ -1,6 +1,10 @@
 package com.tuya.ai.ipcsdkdemo;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -11,7 +15,9 @@ import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
+import com.tuya.smart.aiipc.ipc_sdk.callback.DPConst;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
+import com.tuya.smart.aiipc.netconfig.ConfigProvider;
 import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +46,22 @@ public class MainActivity extends AppCompatActivity {
         iNetConfigManager.setUserId("");
 
         TuyaNetConfig.setDebug(true);
+
+        ConfigProvider.enableMQTT(false);
+
+        IPCServiceManager.getInstance().setResetHandler(isHardward -> {
+
+            //restart
+            Intent mStartActivity = getPackageManager().getLaunchIntentForPackage(getPackageName());
+            if (mStartActivity != null) {
+                int mPendingIntentId = 123456;
+                PendingIntent mPendingIntent = PendingIntent.getActivity(this, mPendingIntentId
+                        , mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                Runtime.getRuntime().exit(0);
+            }
+        });
 
         INetConfigManager.NetConfigCallback netConfigCallback = new INetConfigManager.NetConfigCallback() {
             @Override
