@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.SurfaceView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,7 +16,6 @@ import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
-import com.tuya.smart.aiipc.ipc_sdk.callback.DPConst;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
 import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
@@ -24,10 +24,14 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "IPC_DEMO";
 
+    SurfaceView surfaceView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        surfaceView = findViewById(R.id.surface);
 
         PermissionUtil.check(this, new String[]{
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -41,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
         IPCSDK.initSDK(this);
 
         INetConfigManager iNetConfigManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.NET_CONFIG_SERVICE);
+
+        iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
 
         iNetConfigManager.setAuthorKey("");
         iNetConfigManager.setUserId("");
