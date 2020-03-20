@@ -11,20 +11,32 @@ import android.view.SurfaceView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.tuya.ai.ipcsdkdemo.video.H264FileVideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
+import com.tuya.smart.aiipc.ipc_sdk.api.Common;
+import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
+import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
 import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
+import com.tuya.smart.aiipc.trans.TransJNIInterface;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "IPC_DEMO";
 
     SurfaceView surfaceView;
+
+    H264FileVideoCapture h264FileMainVideoCapture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,16 +45,39 @@ public class MainActivity extends AppCompatActivity {
 
         surfaceView = findViewById(R.id.surface);
 
+        findViewById(R.id.call).setOnClickListener(v -> {
+            IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
+
+            try {
+                InputStream fileStream = getAssets().open("leijun.jpeg");
+
+                byte[] buffer = new byte[2048];
+                int bytesRead;
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                while ((bytesRead = fileStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+                byte[] file = output.toByteArray();
+
+                mediaTransManager.sendDoorBellCallForPress(file, Common.NOTIFICATION_CONTENT_TYPE_E.NOTIFICATION_CONTENT_JPEG);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
         PermissionUtil.check(this, new String[]{
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WAKE_LOCK
+                Manifest.permission.WAKE_LOCK,
+                Manifest.permission.RECORD_AUDIO
         }, this::initSDK);
 
     }
 
     private void initSDK() {
         IPCSDK.initSDK(this);
+        LoadParamConfig();
 
         INetConfigManager iNetConfigManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.NET_CONFIG_SERVICE);
 
@@ -50,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.setAuthorKey("");
         iNetConfigManager.setUserId("");
+        iNetConfigManager.setPID("dy5s9aaspstm5qqd");
 
         TuyaNetConfig.setDebug(true);
 
@@ -82,12 +118,36 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "configOver: token" + token);
                 IMediaTransManager transManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
                 IMqttProcessManager mqttProcessManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MQTT_SERVICE);
+                IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
+                IFeatureManager featureManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.FEATURE_SERVICE);
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
-                transManager.initIoTSDK(token, "", "", "");
-                //如果还需要接入IPC，使用initTransSDK 替代 initIoTSDK
-//                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "", "", "");
+                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "", "");
+
+                featureManager.initDoorBellFeatureEnv();
+
+                runOnUiThread(() -> findViewById(R.id.call).setEnabled(true));
+
+                //推流
+                transManager.startMultiMediaTrans();
+                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
+                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
+
+                mediaTransManager.setDoorBellCallStatusCallback(status -> {
+                    /**
+                     * 门铃呼叫报警接听状态
+                     * status = -1 未知状态
+                     * status = 0 接听
+                     * status = 1 挂断
+                     * status = 2 通话中心跳
+                     * {@link Common.DoorBellCallStatus}
+                     * */
+                    Log.d(TAG, "doorbell back: " + status);
+
+                });
+
+                syncTimeZone();
             }
 
             @Override
@@ -103,5 +163,23 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.configNetInfo(netConfigCallback);
 
+    }
+
+    private void LoadParamConfig() {
+        IParamConfigManager configManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_PARAM_SERVICE);
+
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_WIDTH, 1280);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_HEIGHT, 720);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_FRAME_RATE, 24);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_I_FRAME_INTERVAL, 2);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_BIT_RATE, 1024000);
+    }
+
+    private static void syncTimeZone() {
+        int rawOffset = TransJNIInterface.getInstance().getAppTimezoneBySecond();
+        String[] availableIDs = TimeZone.getAvailableIDs(rawOffset * 1000);
+        if (availableIDs.length > 0) {
+            android.util.Log.d(TAG, "syncTimeZone: " + rawOffset + " , " + availableIDs[0] + " ,  ");
+        }
     }
 }
