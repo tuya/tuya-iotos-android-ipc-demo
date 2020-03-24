@@ -11,24 +11,27 @@ import android.view.SurfaceView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.tuya.ai.ipcsdkdemo.audio.FileAudioCapture;
 import com.tuya.ai.ipcsdkdemo.video.H264FileVideoCapture;
+import com.tuya.ai.ipcsdkdemo.video.VideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
-import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
-import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 import com.tuya.smart.aiipc.trans.TransJNIInterface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.TimeZone;
+
+import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
+import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
     SurfaceView surfaceView;
 
     H264FileVideoCapture h264FileMainVideoCapture;
+
+    VideoCapture videoCapture;
+
+    FileAudioCapture fileAudioCapture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
 
-        iNetConfigManager.setAuthorKey("");
-        iNetConfigManager.setUserId("");
+        iNetConfigManager.setAuthorKey("1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
+        iNetConfigManager.setUserId("tuyaea1abe53672ce6c1");
         iNetConfigManager.setPID("dy5s9aaspstm5qqd");
 
         TuyaNetConfig.setDebug(true);
@@ -123,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
-                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "", "");
+                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "tuyaea1abe53672ce6c1", "1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
 
                 featureManager.initDoorBellFeatureEnv();
 
@@ -131,8 +138,17 @@ public class MainActivity extends AppCompatActivity {
 
                 //推流
                 transManager.startMultiMediaTrans();
-                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
-                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
+
+//                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
+//                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
+
+                //视频流（相机）
+                videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
+                videoCapture.startVideoCapture();
+
+                //音频流（本地文件）
+                fileAudioCapture = new FileAudioCapture(MainActivity.this);
+                fileAudioCapture.startFileCapture();
 
                 mediaTransManager.setDoorBellCallStatusCallback(status -> {
                     /**
@@ -173,6 +189,11 @@ public class MainActivity extends AppCompatActivity {
         configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_FRAME_RATE, 24);
         configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_I_FRAME_INTERVAL, 2);
         configManager.setInt(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN, Common.ParamKey.KEY_VIDEO_BIT_RATE, 1024000);
+
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_AUDIO, Common.ParamKey.KEY_AUDIO_CHANNEL_NUM, 1);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_AUDIO, Common.ParamKey.KEY_AUDIO_SAMPLE_RATE, 8000);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_AUDIO, Common.ParamKey.KEY_AUDIO_SAMPLE_BIT, 16);
+        configManager.setInt(Common.ChannelIndex.E_CHANNEL_AUDIO, Common.ParamKey.KEY_AUDIO_FRAME_RATE, 25);
     }
 
     private static void syncTimeZone() {
