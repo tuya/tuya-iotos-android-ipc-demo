@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceView;
 
@@ -45,12 +46,15 @@ public class MainActivity extends AppCompatActivity {
 
     FileAudioCapture fileAudioCapture;
 
+    private Handler mHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         surfaceView = findViewById(R.id.surface);
+        mHandler = new Handler();
 
         findViewById(R.id.call).setOnClickListener(v -> {
             IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
@@ -100,15 +104,20 @@ public class MainActivity extends AppCompatActivity {
 
         IPCServiceManager.getInstance().setResetHandler(isHardward -> {
 
-            //restart
-            Intent mStartActivity = getPackageManager().getLaunchIntentForPackage(getPackageName());
-            if (mStartActivity != null) {
-                int mPendingIntentId = 123456;
-                PendingIntent mPendingIntent = PendingIntent.getActivity(this, mPendingIntentId
-                        , mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-                AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-                Runtime.getRuntime().exit(0);
+            if (mHandler != null) {
+                mHandler.postDelayed(() -> {
+                    //restart
+                    Intent mStartActivity = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                    if (mStartActivity != null) {
+                        int mPendingIntentId = 123456;
+                        PendingIntent mPendingIntent = PendingIntent.getActivity(this, mPendingIntentId
+                                , mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                        AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                        Runtime.getRuntime().exit(0);
+                    }
+
+                }, 1500);
             }
         });
 
