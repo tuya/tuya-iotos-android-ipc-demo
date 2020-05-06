@@ -122,12 +122,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         INetConfigManager.NetConfigCallback netConfigCallback = new INetConfigManager.NetConfigCallback() {
-            @Override
-            public void onNetConnectFailed() {
-                Log.w(TAG, "retry");
-
-                iNetConfigManager.configNetInfo(this);
-            }
 
             @Override
             public void configOver(boolean first, String token) {
@@ -183,6 +177,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void recConfigInfo() {
                 Log.d(TAG, "recConfigInfo: ");
+            }
+
+            @Override
+            public void onNetConnectFailed(int i, String s) {
+
+            }
+
+            @Override
+            public void onNetPrepareFailed(int i, String s) {
+
             }
         };
 
