@@ -86,16 +86,25 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        IPCSDK.closeWriteLog();
+    }
+
     private void initSDK() {
         IPCSDK.initSDK(this);
+        IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
         LoadParamConfig();
 
         INetConfigManager iNetConfigManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.NET_CONFIG_SERVICE);
 
         iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
 
-        iNetConfigManager.setAuthorKey("1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
-        iNetConfigManager.setUserId("tuyaea1abe53672ce6c1");
+        iNetConfigManager.setAuthorKey("DUPTL4GmGuEWgaUaJgy5wuTGLs9qJjNU");
+        iNetConfigManager.setUserId("tuya8766f5ec50894b9f");
+//        iNetConfigManager.setAuthorKey("1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
+//        iNetConfigManager.setUserId("tuyaea1abe53672ce6c1");
         iNetConfigManager.setPID("dy5s9aaspstm5qqd");
 
         TuyaNetConfig.setDebug(true);
@@ -133,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
-                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "tuyaea1abe53672ce6c1", "1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
+                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "tuya8766f5ec50894b9f", "DUPTL4GmGuEWgaUaJgy5wuTGLs9qJjNU");
 
                 featureManager.initDoorBellFeatureEnv();
 
