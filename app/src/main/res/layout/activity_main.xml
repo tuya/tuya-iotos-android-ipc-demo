@@ -16,6 +16,22 @@
         android:layout_gravity="center_horizontal"
         />
 
+    <Button
+        android:id="@+id/start_record"
+        android:text="开启录像"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <Button
+        android:id="@+id/stop_record"
+        android:text="停止录像"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        />
+
     <SurfaceView
         android:id="@+id/surface"
         android:layout_width="match_parent"

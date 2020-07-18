@@ -18,10 +18,12 @@ import com.tuya.ai.ipcsdkdemo.video.VideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
+import com.tuya.smart.aiipc.ipc_sdk.api.IDeviceManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
+import com.tuya.smart.aiipc.ipc_sdk.callback.NetConfigCallback;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
 import com.tuya.smart.aiipc.trans.TransJNIInterface;
@@ -56,6 +58,17 @@ public class MainActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.surface);
         mHandler = new Handler();
 
+        findViewById(R.id.start_record).setOnClickListener(v -> {
+            IDeviceManager deviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
+            deviceManager.setRecordMode(IDeviceManager.StreamStorageWriteMode.SS_WRITE_MODE_ALL);
+
+            TransJNIInterface.getInstance().startLocalStorage();
+        });
+
+        findViewById(R.id.stop_record).setOnClickListener(v -> {
+            TransJNIInterface.getInstance().stopLocalStorage();
+        });
+
         findViewById(R.id.call).setOnClickListener(v -> {
             IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
 
@@ -89,20 +102,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        IPCSDK.closeWriteLog();
+//        IPCSDK.closeWriteLog();
     }
 
     private void initSDK() {
         IPCSDK.initSDK(this);
-        IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
+//        IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
         LoadParamConfig();
 
         INetConfigManager iNetConfigManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.NET_CONFIG_SERVICE);
 
         iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
 
-        iNetConfigManager.setAuthorKey("DUPTL4GmGuEWgaUaJgy5wuTGLs9qJjNU");
-        iNetConfigManager.setUserId("tuya8766f5ec50894b9f");
+        iNetConfigManager.setAuthorKey("0f65MNQpQoIySZ56KSsKM0bef1kOoM1Z");
+        iNetConfigManager.setUserId("tuya6c12c9057622c879");
 //        iNetConfigManager.setAuthorKey("1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
 //        iNetConfigManager.setUserId("tuyaea1abe53672ce6c1");
         iNetConfigManager.setPID("dy5s9aaspstm5qqd");
@@ -130,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        INetConfigManager.NetConfigCallback netConfigCallback = new INetConfigManager.NetConfigCallback() {
+        NetConfigCallback netConfigCallback = new NetConfigCallback() {
 
             @Override
             public void configOver(boolean first, String token) {
@@ -142,14 +155,14 @@ public class MainActivity extends AppCompatActivity {
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
-                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "tuya8766f5ec50894b9f", "DUPTL4GmGuEWgaUaJgy5wuTGLs9qJjNU");
+                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "tuya6c12c9057622c879", "0f65MNQpQoIySZ56KSsKM0bef1kOoM1Z");
 
                 featureManager.initDoorBellFeatureEnv();
 
                 runOnUiThread(() -> findViewById(R.id.call).setEnabled(true));
 
                 //推流
-                transManager.startMultiMediaTrans();
+                transManager.startMultiMediaTrans(5);
 
 //                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
 //                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
