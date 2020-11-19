@@ -10,5 +10,14 @@ Application demo codes and resources are supplied to develop kinds of Android de
 ## How to use
 [Get-Start-Doc](https://tuyainc.github.io/tuyasmart_android_device_sdk_doc/)
 
+## Support
+You can get support from Tuya with the following methods:
+
+Tuya Smart Help Center: https://support.tuya.com/en/help  
+Technical Support Council: https://iot.tuya.com/council/ 
+
+## License
+This Tuya Android Device IoT SDK Sample is licensed under the MIT License.
+
 
 
