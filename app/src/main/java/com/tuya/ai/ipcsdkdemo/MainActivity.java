@@ -21,20 +21,19 @@ import com.tuya.smart.aiipc.ipc_sdk.api.Common;
 import com.tuya.smart.aiipc.ipc_sdk.api.IDeviceManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
+import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.callback.NetConfigCallback;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
+import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 import com.tuya.smart.aiipc.trans.TransJNIInterface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.TimeZone;
-
-import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
-import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -82,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
                     output.write(buffer, 0, bytesRead);
                 }
                 byte[] file = output.toByteArray();
-
                 mediaTransManager.sendDoorBellCallForPress(file, Common.NOTIFICATION_CONTENT_TYPE_E.NOTIFICATION_CONTENT_JPEG);
 
             } catch (IOException e) {
@@ -114,11 +112,13 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
 
-        iNetConfigManager.setAuthorKey("0f65MNQpQoIySZ56KSsKM0bef1kOoM1Z");
-        iNetConfigManager.setUserId("tuya6c12c9057622c879");
-//        iNetConfigManager.setAuthorKey("1ePAjvcKIiHjuwnPZWOJWeEqKGiHbUYw");
-//        iNetConfigManager.setUserId("tuyaea1abe53672ce6c1");
-        iNetConfigManager.setPID("dy5s9aaspstm5qqd");
+        String pid = "你的PID";
+        String uuid = "你的UUID";
+        String authkey = "你的AUTHKEY";
+
+        iNetConfigManager.setPID(pid);
+        iNetConfigManager.setUserId(uuid);
+        iNetConfigManager.setAuthorKey(authkey);
 
         TuyaNetConfig.setDebug(true);
 
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
-                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", "dy5s9aaspstm5qqd", "tuya6c12c9057622c879", "0f65MNQpQoIySZ56KSsKM0bef1kOoM1Z");
+                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", pid, uuid, authkey);
 
                 featureManager.initDoorBellFeatureEnv();
 
@@ -187,6 +187,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "doorbell back: " + status);
 
                 });
+
+//                mediaTransManager.addAudioTalkCallback(bytes -> {
+//                    Log.d(TAG, "audio callback: " + bytes.length);
+//                });
 
                 syncTimeZone();
             }
