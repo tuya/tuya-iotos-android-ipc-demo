@@ -11,3 +11,13 @@ Tuya安卓设备端IPC SDK是在涂鸦IoTOS体系中针对具备音视频能力�
 ## 如何使用
 [接入文档地址](https://tuyainc.github.io/tuyasmart_android_device_sdk_doc/)
 
+
+## 如何获得技术支持
+You can get support from Tuya with the following methods:
+
+Tuya Smart Help Center: https://support.tuya.com/en/help  
+Technical Support Council: https://iot.tuya.com/council/   
+
+## 使用的开源License
+This Tuya Android Device IPC SDK Sample is licensed under the MIT License.
+
