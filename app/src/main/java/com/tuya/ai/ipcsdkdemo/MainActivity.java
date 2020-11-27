@@ -18,7 +18,6 @@ import com.tuya.ai.ipcsdkdemo.video.VideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
-import com.tuya.smart.aiipc.ipc_sdk.api.IDeviceManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
@@ -57,16 +56,11 @@ public class MainActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.surface);
         mHandler = new Handler();
 
-        findViewById(R.id.start_record).setOnClickListener(v -> {
-            IDeviceManager deviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
-            deviceManager.setRecordMode(IDeviceManager.StreamStorageWriteMode.SS_WRITE_MODE_ALL);
+        findViewById(R.id.reset).setOnClickListener(v -> IPCServiceManager.getInstance().reset());
 
-            TransJNIInterface.getInstance().startLocalStorage();
-        });
+        findViewById(R.id.start_record).setOnClickListener(v -> TransJNIInterface.getInstance().startLocalStorage());
 
-        findViewById(R.id.stop_record).setOnClickListener(v -> {
-            TransJNIInterface.getInstance().stopLocalStorage();
-        });
+        findViewById(R.id.stop_record).setOnClickListener(v -> TransJNIInterface.getInstance().stopLocalStorage());
 
         findViewById(R.id.call).setOnClickListener(v -> {
             IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
@@ -112,9 +106,9 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
 
-        String pid = "你的PID";
-        String uuid = "你的UUID";
-        String authkey = "你的AUTHKEY";
+        String pid = BuildConfig.PID;
+        String uuid = BuildConfig.UUID;
+        String authkey = BuildConfig.AUTHOR_KEY;
 
         iNetConfigManager.setPID(pid);
         iNetConfigManager.setUserId(uuid);
@@ -155,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
-                transManager.initTransSDK(token, "/sdcard/", "/sdcard/", pid, uuid, authkey);
+                transManager.initTransSDK(token, "/sdcard/tuya_ipc/", "/sdcard/tuya_ipc/", pid, uuid, authkey);
 
                 featureManager.initDoorBellFeatureEnv();
 

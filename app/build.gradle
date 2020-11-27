@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+apply from: '../config.gradle'
+
 android {
     compileSdkVersion 29
     buildToolsVersion "28.0.3"
@@ -62,6 +64,6 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-javalite:3.8.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
 
-    implementation 'com.tuya.smart:tuyasmart-ipc_sdk:1.2.2.3'
+    implementation 'com.tuya.smart:tuyasmart-ipc_sdk:1.2.2+'
     implementation 'com.tencent.mars:mars-xlog:1.2.3'
 }
