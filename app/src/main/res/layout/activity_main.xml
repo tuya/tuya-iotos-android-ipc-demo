@@ -8,6 +8,14 @@
     tools:context=".MainActivity">
 
     <Button
+        android:id="@+id/reset"
+        android:text="reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <Button
         android:enabled="false"
         android:id="@+id/call"
         android:text="呼叫"
