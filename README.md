@@ -17,9 +17,10 @@ UUID=Your uuid
 AUTHKEY=Your key  
 PID=Your pid
 ```
-
+<!---
 ## How to use
 [Get_Start_Docs](https://tuyainc.github.io/tuyasmart_android_device_sdk_doc/)
+--->
 
 ## Support
 You can get support from Tuya with the following methods:
