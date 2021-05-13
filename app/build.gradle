@@ -7,11 +7,14 @@ android {
     buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId "com.tuya.ai.ipcsdkdemo"
-        minSdkVersion 19
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // chenglei: 解决注解报错
+        javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
 
         ndk {
             abiFilters "armeabi-v7a"
@@ -64,6 +67,5 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-javalite:3.8.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
     implementation 'com.tuya.smart:tuyasmart-ipc_sdk:1.2.2.9-rc.28'
-    //implementation 'com.tuya.smart:tuyasmart-ipc_sdk:1.2.2+'
     implementation 'com.tencent.mars:mars-xlog:1.2.3'
 }

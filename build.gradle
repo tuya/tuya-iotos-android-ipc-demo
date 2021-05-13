@@ -15,12 +15,11 @@ buildscript {
 
 allprojects {
     repositories {
-        maven {url 'https://dl.bintray.com/tuyainc/TuyaSmartHome/'}
-        maven { url 'https://dl.bintray.com/tuyasmartai/sdk' }
+        maven {
+            url "https://maven-other.tuya.com/repository/maven-releases/"
+        }
         google()
         jcenter()
-        maven { url 'https://maven-other.tuya.com/repository/maven-releases/'}
-        maven { url 'https://maven-other.tuya.com/repository/maven-snapshots/'}
     }
 }
 
