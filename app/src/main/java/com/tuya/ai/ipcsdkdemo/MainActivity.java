@@ -25,8 +25,8 @@ import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.callback.NetConfigCallback;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
-import com.tuya.smart.aiipc.netconfig.ConfigProvider;
-import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
+//import com.tuya.smart.aiipc.netconfig.ConfigProvider;
+//import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
 import com.tuya.smart.aiipc.trans.TransJNIInterface;
 
 import java.io.ByteArrayOutputStream;
@@ -114,9 +114,9 @@ public class MainActivity extends AppCompatActivity {
         iNetConfigManager.setUserId(uuid);
         iNetConfigManager.setAuthorKey(authkey);
 
-        TuyaNetConfig.setDebug(true);
+        //TuyaNetConfig.setDebug(true);
 
-        ConfigProvider.enableMQTT(false);
+        //ConfigProvider.enableMQTT(false);
 
         IPCServiceManager.getInstance().setResetHandler(isHardward -> {
 
