@@ -5,8 +5,11 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceView;
 
@@ -18,21 +21,30 @@ import com.tuya.ai.ipcsdkdemo.video.VideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
+import com.tuya.smart.aiipc.ipc_sdk.api.IControllerManager;
+import com.tuya.smart.aiipc.ipc_sdk.api.IDeviceManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
+import com.tuya.smart.aiipc.ipc_sdk.callback.DPConst;
 import com.tuya.smart.aiipc.ipc_sdk.callback.NetConfigCallback;
+import com.tuya.smart.aiipc.ipc_sdk.impl.NetConfigManagerImpl;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
 import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
+import com.tuya.smart.aiipc.trans.IPCLog;
 import com.tuya.smart.aiipc.trans.TransJNIInterface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.TimeZone;
+
+import static com.tuya.smart.aiipc.ipc_sdk.callback.DPEvent.TUYA_DP_LIGHT;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,6 +75,18 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.stop_record).setOnClickListener(v -> TransJNIInterface.getInstance().stopLocalStorage());
 
         findViewById(R.id.call).setOnClickListener(v -> {
+
+            IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
+            // check register status
+            int regStat = iDeviceManager.getRegisterStatus();
+            Log.d(TAG, "ccc getting qrcode, register status: " + regStat);
+            if (regStat != 2) {
+                // get short url for qrcode
+                String code = iDeviceManager.getQrCode(null);
+                Log.d(TAG, "ccc qrcode: " + code);
+            }
+
+            /*
             IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
 
             try {
@@ -80,15 +104,16 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+*/
         });
 
         PermissionUtil.check(this, new String[]{
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WAKE_LOCK,
-                Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.CAMERA
         }, this::initSDK);
-
     }
 
     @Override
@@ -116,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
         TuyaNetConfig.setDebug(true);
 
+        // Note: network must be ok before enable mqtt active
         ConfigProvider.enableMQTT(false);
 
         IPCServiceManager.getInstance().setResetHandler(isHardward -> {
@@ -141,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void configOver(boolean first, String token) {
-                Log.d(TAG, "configOver: token" + token);
+                Log.d(TAG, "configOver: token: " + token);
                 IMediaTransManager transManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
                 IMqttProcessManager mqttProcessManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MQTT_SERVICE);
                 IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
@@ -149,35 +175,40 @@ public class MainActivity extends AppCompatActivity {
 
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
+                IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
+                // set region
+                iDeviceManager.setRegion(IDeviceManager.IPCRegion.REGION_CN);
+
                 transManager.initTransSDK(token, "/sdcard/tuya_ipc/", "/sdcard/tuya_ipc/", pid, uuid, authkey);
 
                 featureManager.initDoorBellFeatureEnv();
 
                 runOnUiThread(() -> findViewById(R.id.call).setEnabled(true));
 
-                //推流
+
+//                int regStat = iDeviceManager.getRegisterStatus();
+//                Log.d(TAG, "ccc getting qrcode, register status: " + regStat);
+//                if (regStat != 2) {
+//                    String code = iDeviceManager.getQrCode(null);
+//                    Log.d(TAG, "111 ccc qrcode: " + code);
+//                }
+
+                //  start push media
                 transManager.startMultiMediaTrans(5);
 
 //                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
 //                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
 
-                //视频流（相机）
+                // video stream from camera
                 videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
                 videoCapture.startVideoCapture();
 
-                //音频流（本地文件）
+                // audio stream from local file
                 fileAudioCapture = new FileAudioCapture(MainActivity.this);
                 fileAudioCapture.startFileCapture();
 
                 mediaTransManager.setDoorBellCallStatusCallback(status -> {
-                    /**
-                     * 门铃呼叫报警接听状态
-                     * status = -1 未知状态
-                     * status = 0 接听
-                     * status = 1 挂断
-                     * status = 2 通话中心跳
-                     * {@link Common.DoorBellCallStatus}
-                     * */
+
                     Log.d(TAG, "doorbell back: " + status);
 
                 });

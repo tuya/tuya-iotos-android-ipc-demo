@@ -3,6 +3,7 @@ package com.tuya.ai.ipcsdkdemo.video;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
@@ -47,6 +48,8 @@ public class VideoCapture {
 //        p.setPreviewFormat(ImageFormat.YV12);
         p.setPreviewFpsRange(30000, 30000);
         p.setPreviewSize(1280, 720);
+
+        Log.d("Preview", "ccc startPreview1111 ");
 
         try {
             if (ConfigProvider.getConfig(ConfigProvider.QR_OUTPUT) instanceof SurfaceHolder) {
@@ -116,5 +119,7 @@ public class VideoCapture {
             }
         });
         mCamera.startPreview();
+        Log.d("Preview", "ccc startPreview2222 ");
+
     }
 }

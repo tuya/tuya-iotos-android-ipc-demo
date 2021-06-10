@@ -140,7 +140,7 @@ public class VideoCodec {
         mediaFormat = MediaFormat.createVideoFormat("video/avc",  configManager.getInt(mChannel, Common.ParamKey.KEY_VIDEO_WIDTH), configManager.getInt(mChannel, Common.ParamKey.KEY_VIDEO_HEIGHT));
         mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, configManager.getInt(mChannel, Common.ParamKey.KEY_VIDEO_I_FRAME_INTERVAL));
         mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, configManager.getInt(mChannel, Common.ParamKey.KEY_VIDEO_FRAME_RATE));
-        //根据自己的设备来选择需要的格式
+        // Choose the format you need according to your device
         if (Build.VERSION_CODES.KITKAT_WATCH < Build.VERSION.SDK_INT){
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
         }else {
@@ -153,7 +153,7 @@ public class VideoCodec {
     private ArrayBlockingQueue<byte[]> cameraDatas = new ArrayBlockingQueue<>(MAX_BUF_SIZE);
 
     /**
-     * H264编码
+     * H264 encode
      */
     @TargetApi(21)
     private MediaCodec.Callback callback;

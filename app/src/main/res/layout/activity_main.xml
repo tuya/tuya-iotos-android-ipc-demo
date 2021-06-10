@@ -18,7 +18,7 @@
     <Button
         android:enabled="false"
         android:id="@+id/call"
-        android:text="呼叫"
+        android:text="call"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -26,7 +26,7 @@
 
     <Button
         android:id="@+id/start_record"
-        android:text="开启录像"
+        android:text="start record"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -34,7 +34,7 @@
 
     <Button
         android:id="@+id/stop_record"
-        android:text="停止录像"
+        android:text="stop record"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
