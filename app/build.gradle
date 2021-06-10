@@ -13,7 +13,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // chenglei: 解决注解报错
+        // tuya: to fix annotation error
         javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
 
         ndk {

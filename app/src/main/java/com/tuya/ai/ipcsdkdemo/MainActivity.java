@@ -21,12 +21,14 @@ import com.tuya.ai.ipcsdkdemo.video.VideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
+import com.tuya.smart.aiipc.ipc_sdk.api.IControllerManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IDeviceManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
+import com.tuya.smart.aiipc.ipc_sdk.callback.DPConst;
 import com.tuya.smart.aiipc.ipc_sdk.callback.NetConfigCallback;
 import com.tuya.smart.aiipc.ipc_sdk.impl.NetConfigManagerImpl;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
@@ -41,6 +43,8 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.TimeZone;
+
+import static com.tuya.smart.aiipc.ipc_sdk.callback.DPEvent.TUYA_DP_LIGHT;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -73,11 +77,11 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.call).setOnClickListener(v -> {
 
             IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
-            // 判断是否已经注册
+            // check register status
             int regStat = iDeviceManager.getRegisterStatus();
             Log.d(TAG, "ccc getting qrcode, register status: " + regStat);
             if (regStat != 2) {
-                // 获取短码进行二维码展示
+                // get short url for qrcode
                 String code = iDeviceManager.getQrCode(null);
                 Log.d(TAG, "ccc qrcode: " + code);
             }
@@ -137,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
         TuyaNetConfig.setDebug(true);
 
-        // 注意：使能mqtt激活，需保障网络畅通
+        // Note: network must be ok before enable mqtt active
         ConfigProvider.enableMQTT(false);
 
         IPCServiceManager.getInstance().setResetHandler(isHardward -> {
@@ -172,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
                 IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
-                // 设置区域
+                // set region
                 iDeviceManager.setRegion(IDeviceManager.IPCRegion.REGION_CN);
 
                 transManager.initTransSDK(token, "/sdcard/tuya_ipc/", "/sdcard/tuya_ipc/", pid, uuid, authkey);
@@ -189,29 +193,22 @@ public class MainActivity extends AppCompatActivity {
 //                    Log.d(TAG, "111 ccc qrcode: " + code);
 //                }
 
-                //推流
+                //  start push media
                 transManager.startMultiMediaTrans(5);
 
 //                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
 //                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
 
-                //视频流（相机）
+                // video stream from camera
                 videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
                 videoCapture.startVideoCapture();
 
-                //音频流（本地文件）
+                // audio stream from local file
                 fileAudioCapture = new FileAudioCapture(MainActivity.this);
                 fileAudioCapture.startFileCapture();
 
                 mediaTransManager.setDoorBellCallStatusCallback(status -> {
-                    /**
-                     * 门铃呼叫报警接听状态
-                     * status = -1 未知状态
-                     * status = 0 接听
-                     * status = 1 挂断
-                     * status = 2 通话中心跳
-                     * {@link Common.DoorBellCallStatus}
-                     * */
+
                     Log.d(TAG, "doorbell back: " + status);
 
                 });
