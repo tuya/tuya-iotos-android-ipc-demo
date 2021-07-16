@@ -183,13 +183,16 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "initTransSDK ret is " + ret);
                     featureManager.initDoorBellFeatureEnv();
 
+                    Log.d(TAG, "initTransSDK111 ret is " + ret);
+                    //  start push media
+                    transManager.startMultiMediaTrans(5);
+
                     if(!isCallEnable){
                         isCallEnable = true;
                         runOnUiThread(() -> callBtn.setEnabled(true));
                     }
 
-                    //  start push media
-                    transManager.startMultiMediaTrans(5);
+                    Log.d(TAG, "initTransSDK222 ret is " + ret);
 
                     // video stream from camera
                     videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
