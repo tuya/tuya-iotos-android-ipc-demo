@@ -40,11 +40,11 @@ android {
     }
 }
 
-//repositories {
-//    flatDir {
-//        dir 'libs'
-//    }
-//}
+repositories {
+    flatDir {
+        dir 'libs'
+    }
+}
 
 
 dependencies {
@@ -66,6 +66,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.12.3'
     implementation 'com.google.protobuf:protobuf-javalite:3.8.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
-    implementation 'com.tuya.smart:tuyasmart-ipc_sdk:1.2.2.12'
+//    implementation 'com.tuya.smart:tuyasmart-ipc_sdk:1.2.2.12'
     implementation 'com.tencent.mars:mars-xlog:1.2.3'
+    implementation(name: 'ipc_sdk-debug', ext: 'aar')
 }

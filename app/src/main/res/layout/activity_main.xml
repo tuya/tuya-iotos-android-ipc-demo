@@ -16,12 +16,12 @@
         />
 
     <Button
-        android:enabled="false"
         android:id="@+id/call"
         android:text="call"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:enabled="false"
         />
 
     <Button
