@@ -197,7 +197,6 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(TAG, "initTransSDK222 ret is " + ret);
 
-                    Log.d(TAG, "initTransSDK222 ret is " + ret);
 
                     // video stream from camera
                     videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
@@ -206,6 +205,11 @@ public class MainActivity extends AppCompatActivity {
                     // audio stream from local file
                     fileAudioCapture = new FileAudioCapture(MainActivity.this);
                     fileAudioCapture.startFileCapture();
+
+                    //  start push media
+                    transManager.startMultiMediaTrans(5);
+
+                    Log.d(TAG, "initTransSDK333 ret is " + ret);
                 }).start();
 
 //                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
