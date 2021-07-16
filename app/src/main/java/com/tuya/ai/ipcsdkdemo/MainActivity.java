@@ -144,7 +144,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initSDK() {
         IPCSDK.initSDK(this);
-//        IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            IPCSDK.openWriteLog(this, "/data/data/com.tuya.ai.ipcsdkdemo/files/tuya_log/ipc", 3);
+        }else {
+            IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
+        }
+
         LoadParamConfig();
 
         INetConfigManager iNetConfigManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.NET_CONFIG_SERVICE);
@@ -175,22 +180,22 @@ public class MainActivity extends AppCompatActivity {
 
                     int ret ;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        ret = transManager.initTransSDK(token, "/data/data/com.tuya.ai.ipcsdkdemo/files/ipc", "/data/data/com.tuya.ai.ipcsdkdemo/files/ipc", pid, uuid, authkey);
+                        ret = transManager.initTransSDK(token, "/data/data/com.tuya.ai.ipcsdkdemo/files/ipc/", "/data/data/com.tuya.ai.ipcsdkdemo/files/ipc/", pid, uuid, authkey);
                     }else {
-                        ret = transManager.initTransSDK(token, "/sdcard/ipc", "/sdcard/ipc", pid, uuid, authkey);
+                        ret = transManager.initTransSDK(token, "/sdcard/ipc/", "/sdcard/ipc/", pid, uuid, authkey);
                     }
 
                     Log.d(TAG, "initTransSDK ret is " + ret);
                     featureManager.initDoorBellFeatureEnv();
 
                     Log.d(TAG, "initTransSDK111 ret is " + ret);
-                    //  start push media
-                    transManager.startMultiMediaTrans(5);
 
                     if(!isCallEnable){
                         isCallEnable = true;
                         runOnUiThread(() -> callBtn.setEnabled(true));
                     }
+
+                    Log.d(TAG, "initTransSDK222 ret is " + ret);
 
                     Log.d(TAG, "initTransSDK222 ret is " + ret);
 
