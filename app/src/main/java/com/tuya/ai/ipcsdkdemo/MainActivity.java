@@ -5,13 +5,14 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,30 +22,19 @@ import com.tuya.ai.ipcsdkdemo.video.VideoCapture;
 import com.tuya.smart.aiipc.base.permission.PermissionUtil;
 import com.tuya.smart.aiipc.ipc_sdk.IPCSDK;
 import com.tuya.smart.aiipc.ipc_sdk.api.Common;
-import com.tuya.smart.aiipc.ipc_sdk.api.IControllerManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IDeviceManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IFeatureManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMediaTransManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IMqttProcessManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.INetConfigManager;
 import com.tuya.smart.aiipc.ipc_sdk.api.IParamConfigManager;
-import com.tuya.smart.aiipc.ipc_sdk.callback.DPConst;
 import com.tuya.smart.aiipc.ipc_sdk.callback.NetConfigCallback;
-import com.tuya.smart.aiipc.ipc_sdk.impl.NetConfigManagerImpl;
 import com.tuya.smart.aiipc.ipc_sdk.service.IPCServiceManager;
 import com.tuya.smart.aiipc.netconfig.ConfigProvider;
 import com.tuya.smart.aiipc.netconfig.mqtt.TuyaNetConfig;
-import com.tuya.smart.aiipc.trans.IPCLog;
 import com.tuya.smart.aiipc.trans.TransJNIInterface;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.TimeZone;
-
-import static com.tuya.smart.aiipc.ipc_sdk.callback.DPEvent.TUYA_DP_LIGHT;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -59,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     FileAudioCapture fileAudioCapture;
 
     private Handler mHandler;
+    private boolean isCallEnable =false;
+    Button callBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,17 +66,19 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.stop_record).setOnClickListener(v -> TransJNIInterface.getInstance().stopLocalStorage());
 
-        findViewById(R.id.call).setOnClickListener(v -> {
-
-            IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
-            // check register status
-            int regStat = iDeviceManager.getRegisterStatus();
-            Log.d(TAG, "ccc getting qrcode, register status: " + regStat);
-            if (regStat != 2) {
-                // get short url for qrcode
-                String code = iDeviceManager.getQrCode(null);
-                Log.d(TAG, "ccc qrcode: " + code);
-            }
+        callBtn = findViewById(R.id.call);
+        callBtn.setOnClickListener(v -> {
+            if(isCallEnable){
+                Log.d("TAG","callBtn ++++++++++++");
+                IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
+                // check register status
+                int regStat = iDeviceManager.getRegisterStatus();
+                Log.d(TAG, "ccc getting qrcode, register status: " + regStat);
+                if (regStat != 2) {
+                    // get short url for qrcode
+                    String code = iDeviceManager.getQrCode("168");
+                    Log.d(TAG, "ccc qrcode: " + code);
+                }
 
             /*
             IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
@@ -105,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 */
+            }
         });
 
         PermissionUtil.check(this, new String[]{
@@ -113,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.WAKE_LOCK,
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.CAMERA
-        }, this::initSDK);
+        }, this::initSurface);
     }
 
     @Override
@@ -122,46 +117,46 @@ public class MainActivity extends AppCompatActivity {
 //        IPCSDK.closeWriteLog();
     }
 
+    private void initSurface() {
+        if(surfaceView.getHolder().getSurface().isValid()){
+            Log.d(TAG, "initSurface isValid");
+            initSDK();
+        }else {
+            surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+                @Override
+                public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                    Log.d(TAG, "initSurface surfaceCreated");
+                    initSDK();
+                }
+
+                @Override
+                public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+                }
+
+                @Override
+                public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+
+                }
+            });
+        }
+    }
+
     private void initSDK() {
         IPCSDK.initSDK(this);
-//        IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            IPCSDK.openWriteLog(this, "/data/data/com.tuya.ai.ipcsdkdemo/files/tuya_log/ipc", 3);
+        }else {
+            IPCSDK.openWriteLog(this, "/sdcard/tuya_log/ipc", 3);
+        }
+
         LoadParamConfig();
 
         INetConfigManager iNetConfigManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.NET_CONFIG_SERVICE);
 
-        iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
-
         String pid = BuildConfig.PID;
         String uuid = BuildConfig.UUID;
         String authkey = BuildConfig.AUTHOR_KEY;
-
-        iNetConfigManager.setPID(pid);
-        iNetConfigManager.setUserId(uuid);
-        iNetConfigManager.setAuthorKey(authkey);
-
-        TuyaNetConfig.setDebug(true);
-
-        // Note: network must be ok before enable mqtt active
-        ConfigProvider.enableMQTT(false);
-
-        IPCServiceManager.getInstance().setResetHandler(isHardward -> {
-
-            if (mHandler != null) {
-                mHandler.postDelayed(() -> {
-                    //restart
-                    Intent mStartActivity = getPackageManager().getLaunchIntentForPackage(getPackageName());
-                    if (mStartActivity != null) {
-                        int mPendingIntentId = 123456;
-                        PendingIntent mPendingIntent = PendingIntent.getActivity(this, mPendingIntentId
-                                , mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-                        AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-                        Runtime.getRuntime().exit(0);
-                    }
-
-                }, 1500);
-            }
-        });
 
         NetConfigCallback netConfigCallback = new NetConfigCallback() {
 
@@ -173,39 +168,53 @@ public class MainActivity extends AppCompatActivity {
                 IMediaTransManager mediaTransManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.MEDIA_TRANS_SERVICE);
                 IFeatureManager featureManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.FEATURE_SERVICE);
 
+                Log.d(TAG, "configOver111: token: " + token);
+
                 mqttProcessManager.setMqttStatusChangedCallback(status -> Log.w("onMqttStatus", status + ""));
 
                 IDeviceManager iDeviceManager = IPCServiceManager.getInstance().getService(IPCServiceManager.IPCService.DEVICE_SERVICE);
                 // set region
                 iDeviceManager.setRegion(IDeviceManager.IPCRegion.REGION_CN);
 
-                transManager.initTransSDK(token, "/sdcard/tuya_ipc/", "/sdcard/tuya_ipc/", pid, uuid, authkey);
+                new Thread(() -> {
 
-                featureManager.initDoorBellFeatureEnv();
+                    int ret ;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        ret = transManager.initTransSDK(token, "/data/data/com.tuya.ai.ipcsdkdemo/files/ipc/", "/data/data/com.tuya.ai.ipcsdkdemo/files/ipc/", pid, uuid, authkey);
+                    }else {
+                        ret = transManager.initTransSDK(token, "/sdcard/ipc/", "/sdcard/ipc/", pid, uuid, authkey);
+                    }
 
-                runOnUiThread(() -> findViewById(R.id.call).setEnabled(true));
+                    Log.d(TAG, "initTransSDK ret is " + ret);
+                    featureManager.initDoorBellFeatureEnv();
+
+                    Log.d(TAG, "initTransSDK111 ret is " + ret);
+
+                    if(!isCallEnable){
+                        isCallEnable = true;
+                        runOnUiThread(() -> callBtn.setEnabled(true));
+                    }
+
+                    Log.d(TAG, "initTransSDK222 ret is " + ret);
 
 
-//                int regStat = iDeviceManager.getRegisterStatus();
-//                Log.d(TAG, "ccc getting qrcode, register status: " + regStat);
-//                if (regStat != 2) {
-//                    String code = iDeviceManager.getQrCode(null);
-//                    Log.d(TAG, "111 ccc qrcode: " + code);
-//                }
+                    // video stream from camera
+                    videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
+                    videoCapture.startVideoCapture();
 
-                //  start push media
-                transManager.startMultiMediaTrans(5);
+                    // audio stream from local file
+                    fileAudioCapture = new FileAudioCapture(MainActivity.this);
+                    fileAudioCapture.startFileCapture();
+
+                    //  start push media
+                    transManager.startMultiMediaTrans(5);
+
+                    Log.d(TAG, "initTransSDK333 ret is " + ret);
+                }).start();
 
 //                h264FileMainVideoCapture = new H264FileVideoCapture(MainActivity.this, "test.h264");
 //                h264FileMainVideoCapture.startVideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
 
-                // video stream from camera
-                videoCapture = new VideoCapture(Common.ChannelIndex.E_CHANNEL_VIDEO_MAIN);
-                videoCapture.startVideoCapture();
-
-                // audio stream from local file
-                fileAudioCapture = new FileAudioCapture(MainActivity.this);
-                fileAudioCapture.startFileCapture();
 
                 mediaTransManager.setDoorBellCallStatusCallback(status -> {
 
@@ -243,6 +252,35 @@ public class MainActivity extends AppCompatActivity {
 
         iNetConfigManager.configNetInfo(netConfigCallback);
 
+        iNetConfigManager.config("QR_OUTPUT", surfaceView.getHolder());
+
+        iNetConfigManager.setPID(pid);
+        iNetConfigManager.setUserId(uuid);
+        iNetConfigManager.setAuthorKey(authkey);
+
+        TuyaNetConfig.setDebug(true);
+
+        // Note: network must be ok before enable mqtt active
+        ConfigProvider.enableMQTT(true);
+
+        IPCServiceManager.getInstance().setResetHandler(isHardward -> {
+
+            if (mHandler != null) {
+                mHandler.postDelayed(() -> {
+                    //restart
+                    Intent mStartActivity = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                    if (mStartActivity != null) {
+                        int mPendingIntentId = 123456;
+                        PendingIntent mPendingIntent = PendingIntent.getActivity(this, mPendingIntentId
+                                , mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                        AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                        Runtime.getRuntime().exit(0);
+                    }
+
+                }, 1500);
+            }
+        });
     }
 
     private void LoadParamConfig() {
